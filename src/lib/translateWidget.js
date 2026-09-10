@@ -78,7 +78,23 @@ export function setLanguage(lang) {
   showOverlay(lang === 'en' ? 'Restoring original language…' : 'भाषा बदली जा रही है…');
 
   if (lang === 'en') {
+    const hostname = window.location.hostname;
+    const domainParts = hostname.split('.');
+    const rootDomain =
+      domainParts.length > 1 ? domainParts.slice(-2).join('.') : hostname;
+
+    // Google translate widget cookie ko `domain=.example.com` (leading dot) ke
+    // saath set karta hai. Agar hum bina domain specify kiye clear karein, to
+    // sirf host-only cookie delete hota hai aur wo `.example.com` wala reh
+    // jata hai — jiski wajah se reload ke baad phir se translate ho jata hai.
+    // Isliye har possible variant clear karo.
     document.cookie = `${COOKIE_NAME}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+    document.cookie = `${COOKIE_NAME}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${hostname};`;
+    document.cookie = `${COOKIE_NAME}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.${hostname};`;
+    if (rootDomain !== hostname) {
+      document.cookie = `${COOKIE_NAME}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${rootDomain};`;
+      document.cookie = `${COOKIE_NAME}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.${rootDomain};`;
+    }
   } else {
     document.cookie = `${COOKIE_NAME}=/en/${lang}; path=/;`;
   }
